@@ -338,15 +338,4 @@ public class BuilderProcessor extends AbstractProcessor {
                 return "";
         }
     }
-
-    private String getFullClassName(String name) {
-        String result = name;
-        try {
-            Class<?> aClass = Class.forName(name);
-            result = aClass.getName();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
 }
