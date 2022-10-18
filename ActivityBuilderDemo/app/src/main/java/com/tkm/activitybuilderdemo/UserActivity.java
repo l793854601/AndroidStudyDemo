@@ -6,26 +6,24 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.tkm.activitybuilder.annotations.Builder;
-import com.tkm.activitybuilder.annotations.Optional;
-import com.tkm.activitybuilder.annotations.Required;
+import com.tkm.activitybuilder.annotations.Args;
 
 @Builder
 public class UserActivity extends AppCompatActivity {
     private static final String TAG = "TAG";
 
-    @Required
+    @Args
     private String name;
 
-    @Required
+    @Args
     private String owner;
 
-    @Optional(stringValue = "")
+    @Args
     private String url;
 
-    @Optional
+    @Args
     private long createAt;
 
-    @Optional(booleanValue = true)
     private boolean isNormal;
 
     @Override

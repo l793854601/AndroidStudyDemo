@@ -1,8 +1,7 @@
 package com.tkm.activitybuilder.compiler;
 
 import com.tkm.activitybuilder.annotations.Builder;
-import com.tkm.activitybuilder.annotations.Optional;
-import com.tkm.activitybuilder.annotations.Required;
+import com.tkm.activitybuilder.annotations.Args;
 
 import java.io.Writer;
 import java.util.ArrayList;
@@ -22,10 +21,8 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -81,8 +78,7 @@ public class BuilderProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> set = new HashSet<>();
         set.add(Builder.class.getCanonicalName());
-        set.add(Required.class.getCanonicalName());
-        set.add(Optional.class.getCanonicalName());
+        set.add(Args.class.getCanonicalName());
         return set;
     }
 
@@ -116,9 +112,8 @@ public class BuilderProcessor extends AbstractProcessor {
 
                 List<VariableElement> variableElements = elementListMap.get(typeElement);
                 for (VariableElement variableElement : variableElements) {
-                    //  过滤掉未标记Required、Optional注解的field
-                    if (variableElement.getAnnotation(Required.class) == null &&
-                        variableElement.getAnnotation(Optional.class) == null) {
+                    //  过滤掉未标记Args注解的field
+                    if (variableElement.getAnnotation(Args.class) == null) {
                         continue;
                     }
 
@@ -147,9 +142,8 @@ public class BuilderProcessor extends AbstractProcessor {
                 writer.write("\tpublic Bundle toBundle() {\n");
                 writer.write("\t\tBundle bundle = new Bundle();\n");
                 for (VariableElement variableElement : variableElements) {
-                    //  过滤掉未标记Required、Optional注解的field
-                    if (variableElement.getAnnotation(Required.class) == null &&
-                            variableElement.getAnnotation(Optional.class) == null) {
+                    //  过滤掉未标记Args注解的field
+                    if (variableElement.getAnnotation(Args.class) == null) {
                         continue;
                     }
                     //  生成toBundle()方法
