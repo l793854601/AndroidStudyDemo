@@ -3,59 +3,62 @@ package com.tkm.onclickdemo.util.butterknifelite;
 import android.app.Activity;
 import android.view.View;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class ButterKnifeLite {
     public static void bind(Activity activity) {
-        Method[] declaredMethods = activity.getClass().getDeclaredMethods();
-        for (Method method : declaredMethods) {
-            OnClick onClick = method.getAnnotation(OnClick.class);
-            if (onClick != null) {
-                int[] resIds = onClick.value();
-                for (int resId : resIds) {
-                    View view = activity.findViewById(resId);
-                    if (view != null) {
-                        //  不用动态代理的写法
-//                        View.OnClickListener clickListener = v -> {
-//                            try {
-//                                method.setAccessible(true);
-//                                method.invoke(activity, v);
-//                            } catch (Exception e) {
-//                                e.printStackTrace();
-//                            }
-//                        };
-//                        view.setOnClickListener(clickListener);
+        Method[] methods = activity.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            Annotation[] annotations = method.getAnnotations();
+            for (Annotation annotation : annotations) {
+                //  获取OnClick、OnLongClick上的EventType注解
+                EventType eventType = annotation.annotationType().getAnnotation(EventType.class);
+                if (eventType != null) {
+                    //  View.OnClickListener
+                    Class<?> listenerType = eventType.listenerType();
+                    //  setOnClickListener
+                    String setterName = eventType.setter();
 
-                        //  使用动态代理
-                        OnClickListenerHandler onClickListenerHandler = new OnClickListenerHandler(method, activity);
-                        Object proxy = Proxy.newProxyInstance(ButterKnifeLite.class.getClassLoader(), new Class[]{View.OnClickListener.class}, onClickListenerHandler);
-                        try {
-                            //  proxy已经实现了View.OnClickListener，因此可以强转
-                            view.setOnClickListener((View.OnClickListener)proxy);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    method.setAccessible(true);
+                    //  生成动态代理
+                    ListenerHandler handler = new ListenerHandler(activity, method);
+                    Object listenerProxy = Proxy.newProxyInstance(
+                            listenerType.getClassLoader(),
+                            new Class[]{listenerType}, handler);
+
+                    try {
+                        //  获取OnClick、OnLongClick上的value()返回值，得到view的id
+                        Method valueMethod = annotation.getClass().getDeclaredMethod("value");
+                        int[] resIds = (int[]) valueMethod.invoke(annotation);
+                        assert resIds != null;
+                        for (int resId : resIds) {
+                            View view = activity.findViewById(resId);
+                            Method setterMethod = view.getClass().getMethod(setterName, listenerType);
+                            setterMethod.invoke(view, listenerProxy);
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
         }
     }
 
-    private static class OnClickListenerHandler implements InvocationHandler {
+    private static class ListenerHandler implements InvocationHandler {
 
-        private Method method;
         private Activity activity;
+        private Method method;
 
-        public OnClickListenerHandler(Method method, Activity activity) {
-            this.method = method;
+        public ListenerHandler(Activity activity, Method method) {
             this.activity = activity;
+            this.method = method;
         }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            this.method.setAccessible(true);
             return this.method.invoke(activity, args);
         }
     }
