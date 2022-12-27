@@ -51,7 +51,7 @@ public class HotFixLite {
             Class<?> componentType = dexElementsValue.getClass().getComponentType();
 
             //  加载dexFile，得到Elements[]
-            Object hotFixDexElementsValue = getDexElements(context, pathClassLoader, dexFile);
+            Object hotFixDexElementsValue = getDexElements(pathClassLoader, dexFile);
 
             //  将两个Elements[]合并
             int dexElementsValueLength = Array.getLength(dexElementsValue);
@@ -72,7 +72,7 @@ public class HotFixLite {
         }
     }
 
-    private static Object getDexElements(Context context, ClassLoader classLoader, File dexFile) {
+    private static Object getDexElements(ClassLoader classLoader, File dexFile) {
         Object result = new Object();
         try {
             //  反射获取DexPathList的构造器
