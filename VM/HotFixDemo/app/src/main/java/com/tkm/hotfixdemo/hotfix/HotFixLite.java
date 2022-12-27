@@ -41,17 +41,14 @@ public class HotFixLite {
             Field pathListField = pathClassLoader.getClass().getSuperclass().getDeclaredField("pathList");
             pathListField.setAccessible(true);
             Object pathListValue = pathListField.get(pathClassLoader);
-            assert pathListValue != null;
 
             //  反射获取DexPathList中的private Element[] dexElements;
             Field dexElementsField = pathListValue.getClass().getDeclaredField("dexElements");
             dexElementsField.setAccessible(true);
             Object dexElementsValue = dexElementsField.get(pathListValue);
-            assert dexElementsValue != null;
 
             //  反射获取dexElements的类型，也就是Element[]
             Class<?> componentType = dexElementsValue.getClass().getComponentType();
-            assert componentType != null;
 
             //  加载dexFile，得到Elements[]
             Object hotFixDexElementsValue = getDexElements(context, pathClassLoader, dexFile);
@@ -78,16 +75,17 @@ public class HotFixLite {
     private static Object getDexElements(Context context, ClassLoader classLoader, File dexFile) {
         Object result = new Object();
         try {
-            //  获取DexPathList的构造器
+            //  反射获取DexPathList的构造器
             Class<?> pathListClazz = Class.forName("dalvik.system.DexPathList");
             Constructor<?> pathListClazzConstructor = pathListClazz.getConstructor(ClassLoader.class, String.class, String.class, File.class);
-            //  创建DexPathList实例
+            //  反射创建DexPathList实例
+            //  librarySearchPath：native library相关，可以为null
+            //  optimizedDirectory：为null，则使用默认
             Object pathList = pathListClazzConstructor.newInstance(classLoader, dexFile.getAbsolutePath(), null, null);
-            //  获取DexPathList实例的Elements[]
+            //  反射获取DexPathList实例的Elements[]
             Field elementsField = pathList.getClass().getDeclaredField("dexElements");
             elementsField.setAccessible(true);
             result = elementsField.get(pathList);
-            assert result != null;
         } catch (Exception e) {
             e.printStackTrace();
         }
